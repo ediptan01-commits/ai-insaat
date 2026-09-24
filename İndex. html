@@ -1,0 +1,244 @@
+<div class="container">
+    <h1>🏗️ Profesyonel Şantiye ERP & Keşif Motoru</h1>
+
+    <div class="card">
+        <label>Toplam İnşaat Alanı (m²)</label>
+        <input type="number" id="areaSize" value="300">
+
+        <label>Bina Kat Sayısı (Statik Yük İçin)</label>
+        <input type="number" id="floors" value="3">
+
+        <label>Bölgesel Fiyat Seviyesi (Bursa Piyasası)</label>
+        <select id="regionFactor">
+            <option value="1">Standart Serbest Piyasa</option>
+            <option value="1.10">Lüks / 1. Sınıf Malzeme ve İşçilik (+%10)</option>
+        </select>
+
+        <button onclick="calculateRealCost()">Gerçekçi Keşif ve Maliyet Hesapla</button>
+    </div>
+
+    <div class="card" id="resultCard" style="display:none;">
+        <h3>📦 Gerçek Mühendislik Metraj Dökümü</h3>
+        <div class="result-box" id="materialListContent"></div>
+
+        <h3 style="margin-top: 20px;">📊 Gerçekçi Piyasa Maliyet Özeti</h3>
+        <div class="result-box">
+            <div class="result-row">
+                <span>Hafriyat & Temel Altyapı:</span>
+                <span id="earthworkCost">0 TL</span>
+            </div>
+            <div class="result-row">
+                <span>Kaba İnşaat (Demir, Beton, Kalıp, Tuğla):</span>
+                <span id="roughCost">0 TL</span>
+            </div>
+            <div class="result-row">
+                <span>Mekanik, Elektrik & Tesisat:</span>
+                <span id="mepCost">0 TL</span>
+            </div>
+            <div class="result-row">
+                <span>İnce İşler (Sıva, Şap, Alçıpan, Boya, Seramik):</span>
+                <span id="finishingCost">0 TL</span>
+            </div>
+            <div class="result-row">
+                <span>Dış Cephe Mantolama & Yalıtım:</span>
+                <span id="facadeCost">0 TL</span>
+            </div>
+            <div class="result-row">
+                <span>Doğrama, Kapı & Çatı İmalatları:</span>
+                <span id="extraCost">0 TL</span>
+            </div>
+            <div class="result-row">
+                <span>Toplam Usta & Amele İşçilikleri:</span>
+                <span id="laborCost">0 TL</span>
+            </div>
+            <div class="result-row">
+                <span>Nakliye, Vinç & Şantiye Fireleri (%7):</span>
+                <span id="wasteCost">0 TL</span>
+            </div>
+            <div class="result-row total-row">
+                <span>Anahtar Teslim Genel Toplam:</span>
+                <span id="totalCost">0 TL</span>
+            </div>
+        </div>
+
+        <button onclick="shareOnWhatsApp()" style="background-color: #22c55e; color: white; margin-top: 15px;">
+            💬 Raporu WhatsApp ile Paylaş
+        </button>
+    </div>
+</div>
+
+<style>
+:root {
+    --primary: #f59e0b;
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --text: #f8fafc;
+    --text-secondary: #94a3b8;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 16px;
+}
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+h1 {
+    font-size: 1.15rem;
+    text-align: center;
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+h3 {
+    font-size: 1rem;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+.card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+input, select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background-color: #0f172a;
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+button {
+    width: 100%;
+    background-color: var(--primary);
+    color: #0f172a;
+    font-weight: bold;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    cursor: pointer;
+    margin-top: 8px;
+}
+button:active {
+    opacity: 0.9;
+}
+.result-box {
+    background-color: #0f172a;
+    border-left: 4px solid var(--primary);
+    padding: 12px;
+    border-radius: 0 8px 8px 0;
+    margin-top: 10px;
+}
+.result-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 0.88rem;
+}
+.total-row {
+    font-weight: bold;
+    font-size: 1.05rem;
+    color: var(--primary);
+    border-top: 1px solid #334155;
+    padding-top: 8px;
+    margin-top: 8px;
+}
+.material-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+    border-bottom: 1px dashed #334155;
+    padding-bottom: 4px;
+}
+</style>
+
+<script>
+let lastReportData = {};
+
+function calculateRealCost() {
+    const area = parseFloat(document.getElementById('areaSize').value) || 0;
+    const floors = parseFloat(document.getElementById('floors').value) || 1;
+    const factor = parseFloat(document.getElementById('regionFactor').value);
+
+    // Gerçekçi Mühendislik Metraj Hesapları
+    let rebarTon = (area * 0.032) * (1 + (floors * 0.02)); 
+    let concreteM3 = area * 0.38; 
+    let brickCount = area * 14; 
+    let facadeM2 = area * 0.65; 
+    let pvcM2 = area * 0.18; 
+
+    // Güncel Piyasa Birim Fiyatları
+    let earthwork = area * 250 * factor;       
+    let rough = (rebarTon * 26000) + (concreteM3 * 3400) + (brickCount * 18) + (area * 400 * factor); 
+    let mep = area * 950 * factor;             
+    let finishing = area * 1200 * factor;      
+    let facade = facadeM2 * 950 * factor;          
+    let extra = (pvcM2 * 3500) + (area * 600 * factor);          
+    let labor = area * 1800 * factor;          
+    
+    let subTotal = earthwork + rough + mep + finishing + facade + extra + labor;
+    let waste = subTotal * 0.07;               
+    let grandTotal = subTotal + waste;         
+
+    lastReportData = {
+        area: area,
+        floors: floors,
+        rebar: Math.ceil(rebarTon),
+        concrete: Math.ceil(concreteM3),
+        total: grandTotal.toLocaleString('tr-TR', {maximumFractionDigits: 0})
+    };
+
+    let materialsHTML = `
+        <div class="material-item"><span>İnşaat Demiri (Ø12-Ø28):</span> <b>${lastReportData.rebar} Ton</b></div>
+        <div class="material-item"><span>C30 Hazır Beton:</span> <b>${lastReportData.concrete} m³</b></div>
+        <div class="material-item"><span>Gazbeton / Tuğla:</span> <b>${Math.ceil(brickCount)} Adet</b></div>
+        <div class="material-item"><span>Dış Cephe Yalıtım Alanı:</span> <b>${Math.ceil(facadeM2)} m²</b></div>
+        <div class="material-item"><span>PVC Doğrama / Pencere:</span> <b>${Math.ceil(pvcM2)} m²</b></div>
+        <div class="material-item"><span>Çimento & Sıva Torbası:</span> <b>${Math.ceil(area * 3)} Torba</b></div>
+    `;
+
+    document.getElementById('materialListContent').innerHTML = materialsHTML;
+    document.getElementById('earthworkCost').innerText = earthwork.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + " TL";
+    document.getElementById('roughCost').innerText = rough.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + " TL";
+    document.getElementById('mepCost').innerText = mep.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + " TL";
+    document.getElementById('finishingCost').innerText = finishing.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + " TL";
+    document.getElementById('facadeCost').innerText = facade.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + " TL";
+    document.getElementById('extraCost').innerText = extra.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + " TL";
+    document.getElementById('wasteCost').innerText = waste.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + " TL";
+    document.getElementById('laborCost').innerText = labor.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + " TL";
+    document.getElementById('totalCost').innerText = lastReportData.total + " TL";
+
+    document.getElementById('resultCard').style.display = 'block';
+}
+
+function shareOnWhatsApp() {
+    let text = `🏗️ *ŞANTİYE KEŞİF VE MALİYET RAPORU* 🏗️\n\n` +
+               `📐 *Toplam Alan:* ${lastReportData.area} m²\n` +
+               `🏢 *Kat Sayısı:* ${lastReportData.floors} Kat\n` +
+               `----------------------------------\n` +
+               `📦 *Önemli Metrajlar:*\n` +
+               `- İnşaat Demiri: ${lastReportData.rebar} Ton\n` +
+               `- C30 Hazır Beton: ${lastReportData.concrete} m³\n` +
+               `----------------------------------\n` +
+               `💰 *ANAHTAR TESLİM TOPLAM:* *${lastReportData.total} TL*\n\n` +
+               `_Tan İnşaat Otonom ERP Sistemi tarafından oluşturulmuştur._`;
+
+    let encodedText = encodeURIComponent(text);
+    window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
+}
+</script>
